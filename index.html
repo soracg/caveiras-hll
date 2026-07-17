@@ -858,13 +858,43 @@ img {
     grid-template-columns: 1fr;
   }
 
+  /* Cada squad tem posição fixa (grid-column/grid-row) pensada pro
+     grid de 5 colunas do desktop. No mobile isso precisa ser resetado,
+     senão o navegador cria colunas extras escondidas pra respeitar
+     essas posições e a tela continua parecendo multi-coluna. */
+  .board > .squad {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+
   .card.squad {
     min-height: 0;
   }
 
+  .squad-header {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 10px 12px;
+    gap: 12px;
+  }
+
   .squad-icon {
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
+  }
+
+  .squad-title {
+    display: block !important;
+    font-family: 'Oswald', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .squad-count {
+    margin-left: auto;
   }
 
   button {
