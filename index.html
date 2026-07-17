@@ -801,12 +801,19 @@ img {
   display: none;
 }
 
-#board-scale-host {
-  overflow: hidden;
-  position: relative;
+/* Usada só durante a exportação (imagem/vídeo/gif): força o board a
+   renderizar como no desktop, mesmo estando empilhado na tela do celular. */
+#export-area.force-desktop-export {
+  width: 1400px;
+}
+
+#export-area.force-desktop-export .board {
+  grid-template-columns: repeat(5, 1fr);
 }
 
 @media (max-width: 860px) {
+  body { padding-top: 52px; }
+
   .mobile-menu-btn { display: inline-flex; }
 
   .match-info { flex-wrap: wrap; }
@@ -846,8 +853,27 @@ img {
     z-index: 9999;
   }
 
-  #export-area {
-    transform-origin: top left;
+  /* Squads empilhados, 1 por linha, tamanho normal e legível */
+  .board {
+    grid-template-columns: 1fr;
+  }
+
+  .card.squad {
+    min-height: 0;
+  }
+
+  .squad-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  button {
+    min-height: 40px;
+  }
+
+  input, select {
+    font-size: 14px;
+    padding: 10px 8px;
   }
 }
 </style>
@@ -1101,71 +1127,19 @@ function toggleSidebar(){
   document.getElementById("sidebarOverlay").classList.toggle("open");
 }
 
-/* Mantém o board com o mesmo layout do desktop, só encolhendo
-   proporcionalmente pra caber na tela do celular. */
-const BOARD_DESIGN_WIDTH = 1400;
-const BOARD_MOBILE_BREAKPOINT = 860;
-
-function fitBoardToScreen(){
-  const area = document.getElementById("export-area");
-  const host = document.getElementById("board-scale-host");
-  if(!area || !host) return;
-
-  if(window.innerWidth <= BOARD_MOBILE_BREAKPOINT){
-    area.style.width = BOARD_DESIGN_WIDTH + "px";
-    area.style.transform = "none";
-    const naturalHeight = area.scrollHeight;
-    const scale = Math.min(1, (window.innerWidth - 12) / BOARD_DESIGN_WIDTH);
-    area.style.transform = "scale(" + scale + ")";
-    host.style.height = (naturalHeight * scale) + "px";
-  } else {
-    area.style.transform = "";
-    area.style.width = "";
-    host.style.height = "";
-  }
-}
-
-window.addEventListener("load", fitBoardToScreen);
-window.addEventListener("resize", fitBoardToScreen);
-window.addEventListener("orientationchange", () => setTimeout(fitBoardToScreen, 200));
-
 /* Usadas pelas funções de exportação: garantem que a imagem/vídeo/gif
-   sempre saia no tamanho cheio (desktop), nunca encolhido pelo mobile. */
+   sempre saia no layout de desktop (5 colunas), mesmo se o celular
+   estiver mostrando os squads empilhados. */
 function suspenderEscalaBoard(){
   const area = document.getElementById("export-area");
-  const host = document.getElementById("board-scale-host");
-  const estado = {
-    transform: area.style.transform,
-    width: area.style.width,
-    hostHeight: host ? host.style.height : ""
-  };
-  area.style.transform = "none";
-  area.style.width = "";
-  if(host) host.style.height = "";
-  return estado;
+  area.classList.add("force-desktop-export");
+  return true;
 }
 
-function restaurarEscalaBoard(estado){
+function restaurarEscalaBoard(){
   const area = document.getElementById("export-area");
-  const host = document.getElementById("board-scale-host");
-  area.style.transform = estado.transform;
-  area.style.width = estado.width;
-  if(host) host.style.height = estado.hostHeight;
-  fitBoardToScreen();
+  area.classList.remove("force-desktop-export");
 }
-
-/* Recalcula sempre que jogadores/squads forem adicionados ou removidos */
-document.addEventListener("DOMContentLoaded", () => {
-  const area = document.getElementById("export-area");
-  if(!area) return;
-  let pending = false;
-  const observer = new MutationObserver(() => {
-    if(pending) return;
-    pending = true;
-    requestAnimationFrame(() => { fitBoardToScreen(); pending = false; });
-  });
-  observer.observe(area, { childList: true, subtree: true });
-});
 
 const GRID_SIZE = 20;
 const SNAP_DISTANCE = 25;
@@ -1920,8 +1894,7 @@ function exportarImagemPro(){
   wrapper.style.background = "#1b1e1a";
 
   const clone = area.cloneNode(true);
-  clone.style.transform = "none";
-  clone.style.width = "";
+  clone.classList.add("force-desktop-export");
   clone.querySelectorAll(".squad").forEach(card => {
     const hasPlayers = card.querySelectorAll("li").length > 0;
     if (!hasPlayers) card.remove();
