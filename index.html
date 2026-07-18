@@ -809,6 +809,17 @@ img {
 
 #export-area.force-desktop-export .board {
   grid-template-columns: repeat(5, 1fr);
+  grid-auto-flow: row dense;
+}
+
+/* Cada squad tem uma posição fixa (grid-column/grid-row) pra permitir
+   organizar manualmente no site. Isso cria "buracos" quando algum
+   squad fica vazio/oculto. Na exportação, ignoramos essas posições
+   fixas e deixamos os squads se organizarem em sequência, sem espaços
+   vazios entre eles. */
+#export-area.force-desktop-export .board > .squad {
+  grid-column: auto !important;
+  grid-row: auto !important;
 }
 
 @media (max-width: 860px) {
@@ -2718,8 +2729,8 @@ function carregarBackupJSON(input){
     try {
       const dados = JSON.parse(e.target.result);
       Object.keys(dados).forEach(key => { localStorage.setItem(key, dados[key]); });
-      atualizarListaFormacoes();
-      alert("Backup carregado! Selecione a formação e clique em Carregar.");
+      alert("Backup carregado! A página vai atualizar agora pra mostrar as formações.");
+      location.reload();
     } catch(err) {
       alert("Arquivo inválido.");
     }
